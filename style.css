@@ -425,10 +425,11 @@ body {
   right: 0;
   text-align: center;
   padding: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: #ffffff;
   font-size: 0.9rem;
-  color: #666;
+  color: #333;
   z-index: 1000;
+  border-top: 1px solid #f0f0f0;
 }
 
 .footer p {
@@ -467,7 +468,6 @@ body {
 @media screen and (max-width: 480px) {
   .question {
     font-size: 1.5rem;
-    white-space: nowrap;
   }
   
   .result-container h2 {
