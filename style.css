@@ -436,6 +436,23 @@ body {
   margin: 0;
 }
 
+.footer .email-link {
+  color: #ff54a4;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.footer .email-link:hover {
+  color: #ff6b81;
+  text-decoration: underline;
+}
+
+/* Audio controls */
+#background-music {
+  display: none;
+}
+
 /* Responsive design for mobile devices */
 @media screen and (max-width: 768px) {
   .question {

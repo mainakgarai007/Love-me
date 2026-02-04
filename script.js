@@ -20,9 +20,27 @@ yesBtn.addEventListener("click", () => {
   questionContainer.style.display = "none";
   heartLoader.style.display = "inherit";
 
+  // Start background music on user interaction
+  const backgroundMusic = document.getElementById("background-music");
+  if (backgroundMusic) {
+    backgroundMusic.play().catch(err => {
+      console.log("Audio playback failed:", err);
+    });
+  }
+
   const timeoutId = setTimeout(() => {
     heartLoader.style.display = "none";
     resultContainer.style.display = "inherit";
     gifResult.play();
   }, 3000);
+});
+
+// Also try to play music on any user interaction with no button
+noBtn.addEventListener("click", () => {
+  const backgroundMusic = document.getElementById("background-music");
+  if (backgroundMusic && backgroundMusic.paused) {
+    backgroundMusic.play().catch(err => {
+      console.log("Audio playback failed:", err);
+    });
+  }
 });
