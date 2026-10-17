@@ -1,27 +1,33 @@
 # Love-me ❤️
 
-Mobile-first love-question page with shareable links, optional recipient details, a creator dashboard, and visitor history.
+Mobile-first love-question page with anonymous temporary Firebase accounts, creator-selected questions, shareable links, a creator dashboard, optional recipient details, and local browser caching.
 
-## Shared Firebase setup
+## Firebase setup (shared All-in project)
 
-This repository is configured to use the existing **All-in** Firebase project (`all-in-a5f3b`) and web app `common-backend`.
+1. In Firebase Console → Authentication → Sign-in method, enable **Anonymous** sign-in. No visible login screen is used.
+2. In Authentication → Settings → Authorized domains, ensure `mainakgarai007.github.io` is listed.
+3. Publish the combined rules in `firestore.rules` to Firebase Console → Firestore Database → Rules. Do not replace these with rules for only one app if other apps use the same project.
+4. **Enable automatic deletion after seven days:** in Firestore → TTL policies, create a TTL policy for collection group `campaigns` using field `expiresAt`; create another TTL policy for collection group `events` using field `expiresAt`. This is a Firebase Console setting and is not activated merely by publishing this repository. TTL deletion is asynchronous, so rules also block expired links immediately.
+5. Keep GitHub Pages enabled and this repository public if you want people to open shared links.
+6. Test by creating a link, opening it on another browser/device, answering, and checking the dashboard.
 
-1. In `firebase-config.js`, replace `YOUR_FIREBASE_API_KEY` with the Web API key from Firebase Console → Project settings → General → Your apps → common-backend.
-2. Firebase Console → Authentication → Sign-in method: enable **Google**.
-3. Authentication → Settings → Authorized domains: ensure `mainakgarai007.github.io` is listed.
-4. Review `firestore.rules`. It merges the shared starter's user-data rules with Love-me campaign/event rules. Publish these combined rules in Firebase Console → Firestore Database → Rules. Do not replace them with only one app's rules, or the other app may stop working.
-5. GitHub Pages must be enabled for the public Love-me share page to work. The repository is currently public; do not make it private if you want public links to work.
-6. Test creator sign-in, create a link, then open the generated link in a separate browser/private window and check the response/dashboard.
+## How it works
+
+- Creator enters their own name, the special person's name, and chooses exactly one question: `Do You Like Me?` or `Do You Love Me?`.
+- Firebase Anonymous Authentication creates a temporary account in the background; no login form is shown. Keep the same browser data to retain access to the creator dashboard.
+- A local browser copy of campaign metadata and response events is cached in localStorage. Clearing browser/app data can remove this local copy.
+- Campaign links are blocked by Firestore rules after seven days. Actual cloud document removal requires the two TTL policies above; each event has its own expiry field so events are removed too.
+- The first-page track is `bg-music-h-not-l.mp3`. After Yes, that track stops and the existing `Love me.mp4` plays with its audio enabled. If that video has no audio track, add a separate love-music audio file and wire it in the page.
+- The No button moves away playfully; the recipient should still be able to leave the page or decline.
 
 ## Data paths
+
 - Love-me: `campaigns/{campaignId}` and `campaigns/{campaignId}/events/{eventId}`
 - Shared starter: `users/{uid}/apps/{appId}/data/{docId}`
 
-The `appId` separates paths for organization, not as a security boundary between client apps using the same Firebase project. Use separate Firebase projects or server-mediated authorization if stronger app-to-app isolation is needed.
+## Privacy notes
 
-## Privacy and safety
-- The share URL is public to anyone who has it.
-- The creator dashboard requires Google sign-in and rules limit campaign history to the campaign owner.
-- Recipient name and contact are optional; only submit details the recipient is comfortable sharing.
-- Never put service-account keys or Admin SDK credentials in client-side code.
-- Firebase Spark quotas apply.
+- Anyone who receives the share URL can open the recipient page.
+- The optional name/contact are visible to the link creator if submitted; don't enter sensitive information.
+- Local browser storage is not a secure vault and is removed if browser data is cleared.
+- Firebase Spark quotas apply. Never put service-account keys or Admin SDK credentials in client-side code.
