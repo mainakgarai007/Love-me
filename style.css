@@ -65,3 +65,13 @@ body.recipient-mode{min-height:100svh;height:100svh;overflow:hidden;padding:clam
 
 .notice-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:18px}
 .notice-actions .primary-btn,.notice-actions .secondary-btn{font-size:13px}
+
+.link-manager{margin:18px 0 16px;padding:16px;border:1px solid var(--line);border-radius:18px;background:#fffafd}
+.link-manager-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.link-manager-heading h4{margin:0;font-size:17px}
+#link-count{font-size:13px;border-radius:999px;background:#ffe4ef;color:#b92d70;padding:6px 11px}
+.user-links{display:grid;gap:8px;margin-top:12px}
+.user-link-row{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:13px;background:white;padding:5px}
+.user-link-row.is-selected{border-color:var(--accent,#e83e8c);background:#fff2f8}
+.user-link-select{flex:1;min-width:0;text-align:left;border:0;background:transparent;padding:11px 9px;color:var(--ink);font:inherit;font-size:14px;overflow-wrap:anywhere}
+.user-link-open{width:38px;height:38px;flex:none;border:0;border-radius:10px;background:#ffe4ef;color:#b92d70;font-size:19px}
