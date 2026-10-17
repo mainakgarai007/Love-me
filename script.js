@@ -127,6 +127,7 @@ import { firebaseConfig } from "./firebase-config.js";
       createdAt: serverTimestamp(), expiresAt
     });
     saveLocalCampaign(item);
+    try { localStorage.setItem("love-me-last-campaign-id", id); } catch (_) {}
     const url = new URL(window.location.href);
     url.search = ""; url.searchParams.set("love", id);
     shareUrl.value = url.toString(); shareCard.hidden = false;
@@ -228,9 +229,20 @@ import { firebaseConfig } from "./firebase-config.js";
     startApp().then(() => loadCampaign(linkId)).catch((error) => { console.error(error); showInvalid(); });
   } else {
     showCreator();
-    startApp().then(() => {
-      const local = readLocalCampaigns().find((item) => item.id === dashboard.dataset.campaignId);
-      if (local) dashboardNote.textContent = "Local saved link: " + local.loveName + ".";
+    startApp().then(async () => {
+      const lastId = (() => { try { return localStorage.getItem("love-me-last-campaign-id"); } catch (_) { return null; } })();
+      const local = readLocalCampaigns().find((item) => item.id === lastId);
+      if (local) {
+        dashboard.dataset.campaignId = local.id;
+        shareUrl.value = new URL("?love=" + encodeURIComponent(local.id), window.location.href).toString();
+        shareCard.hidden = false;
+        dashboard.hidden = false;
+        $("#creator-name").value = local.creatorName || $("#creator-name").value;
+        $("#love-name").value = local.loveName || "";
+        $("#question-choice").value = local.question || "Do You Love Me?";
+        dashboardNote.textContent = "Local saved link for " + local.loveName + ". Cloud link expires: " + new Date(local.expiresAt).toLocaleString() + ".";
+        if (currentUser) await refreshDashboard();
+      }
     }).catch((error) => { console.error(error); message(creatorMessage, "Firebase could not start. Check the config file.", "error"); });
   }
 })();
