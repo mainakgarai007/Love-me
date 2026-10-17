@@ -59,7 +59,8 @@ service cloud.firestore {
           && request.resource.data.expiresAt > request.time
           && request.resource.data.expiresAt <= request.time + duration.value(8, 'd');
         allow read: if ownsCampaign(campaignId);
-        allow update: if false;\n        allow delete: if ownsCampaign(campaignId);
+        allow update: if false;
+        allow delete: if ownsCampaign(campaignId);
       }
     }
 
