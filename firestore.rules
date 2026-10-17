@@ -20,12 +20,10 @@ service cloud.firestore {
     }
 
     match /campaigns/{campaignId} {
-      // Share links stop working after the seven-day expiry.
-      // Owners can manage their own campaign even after expiry; visitors cannot open expired links.
+      // Links stay active until the owner deletes them or disables them.
       allow get: if (signedIn() && resource.data.ownerUid == request.auth.uid)
-        || (resource.data.expiresAt > request.time && resource.data.active == true);
-      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid
-;
+        || resource.data.active == true;
+      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
       allow create: if signedIn()
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.keys().hasOnly(['ownerUid', 'creatorName', 'loveName', 'question', 'active', 'createdAt'])
@@ -36,15 +34,11 @@ service cloud.firestore {
         && request.resource.data.loveName.size() > 0
         && request.resource.data.loveName.size() <= 60
         && request.resource.data.question in ['Do You Like Me?', 'Do You Love Me?']
-        && request.resource.data.active == true
-        && request.resource.data.expiresAt is timestamp
-        && request.resource.data.expiresAt > request.time
-;
+        && request.resource.data.active == true;
       allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
       match /events/{eventId} {
         allow create: if get(/databases/$(database)/documents/campaigns/$(campaignId)).data.active == true
-          && get(/databases/$(database)/documents/campaigns/$(campaignId)).data.expiresAt > request.time
           && request.resource.data.keys().hasOnly(['type', 'visitorId', 'isRepeat', 'createdAt', 'recipientName', 'contact', 'campaignId'])
           && request.resource.data.type in ['visit', 'yes', 'no_attempt', 'details']
           && request.resource.data.visitorId is string
@@ -54,10 +48,7 @@ service cloud.firestore {
           && request.resource.data.recipientName.size() <= 60
           && request.resource.data.contact is string
           && request.resource.data.contact.size() <= 120
-          && request.resource.data.campaignId == campaignId
-          && request.resource.data.expiresAt is timestamp
-          && request.resource.data.expiresAt > request.time
-;
+          && request.resource.data.campaignId == campaignId;
         allow read: if ownsCampaign(campaignId);
         allow update: if false;
         allow delete: if ownsCampaign(campaignId);
