@@ -13,9 +13,10 @@ import { firebaseConfig } from "./firebase-config.js";
   const noButton = $("#no-button"), yesButton = $("#yes-button"), stage = $("#button-stage"), result = $("#recipient-result");
   const detailsForm = $("#recipient-details");
   const quickMenu = $("#quick-menu"), quickMenuToggle = $("#quick-menu-toggle"), quickMenuPanel = $("#quick-menu-panel"), feedbackModal = $("#feedback-modal");
+  const accountNoticeModal = $("#account-notice-modal");
   const accountNotice = $("#account-notice-backdrop");
   let pendingCreate = null;
-  let app = null, auth = null, db = null, currentUser = null, campaignId = null, campaign = null, visitorId = null, yesSubmitted = false;
+  let app = null, auth = null, db = null, currentUser = null, campaignId = null, campaign = null, visitorId = null, yesSubmitted = false, pendingCampaign = null;
   const LOCAL_CAMPAIGNS_KEY = "love-me-local-campaigns-v2";
   const firebaseReady = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && !["YOUR_API_KEY", "YOUR_FIREBASE_API_KEY"].includes(firebaseConfig.apiKey));
 
@@ -112,7 +113,6 @@ import { firebaseConfig } from "./firebase-config.js";
     const snap = await getDoc(doc(db, "campaigns", id));
     if (!snap.exists() || snap.data().active === false) { showInvalid(); return; }
     const data = snap.data();
-    if (data.expiresAt && data.expiresAt.toDate && data.expiresAt.toDate().getTime() <= Date.now()) { showInvalid(); return; }
     campaignId = id; campaign = data; visitorId = browserVisitorId(id).id;
     showRecipient();
     $("#recipient-question").textContent = data.question || "Do You Love Me?";
@@ -121,8 +121,8 @@ import { firebaseConfig } from "./firebase-config.js";
     startOldMusic();
   }
   async function countActiveCampaigns() {
-    if (!db || !currentUser) return readLocalCampaigns().filter(item => new Date(item.expiresAt).getTime() > Date.now()).length;
-    const activeQuery = query(collection(db, "campaigns"), where("ownerUid", "==", currentUser.uid), where("expiresAt", ">", Timestamp.now()));
+    if (!db || !currentUser) return readLocalCampaigns().length;
+    const activeQuery = query(collection(db, "campaigns"), where("ownerUid", "==", currentUser.uid));
     const snapshot = await getDocs(activeQuery);
     return snapshot.size;
   }
@@ -137,11 +137,10 @@ import { firebaseConfig } from "./firebase-config.js";
       return;
     }
     const id = safeId().replaceAll("-", "").slice(0, 18);
-    const expiresAt = Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
-    const item = { id, creatorName, loveName, question, createdAt: new Date().toISOString(), expiresAt: expiresAt.toDate().toISOString() };
+    const item = { id, creatorName, loveName, question, createdAt: new Date().toISOString() };
     await setDoc(doc(db, "campaigns", id), {
       ownerUid: currentUser.uid, creatorName, loveName, question, active: true,
-      createdAt: serverTimestamp(), expiresAt
+      createdAt: serverTimestamp()
     });
     saveLocalCampaign(item);
     try { localStorage.setItem("love-me-last-campaign-id", id); } catch (_) {}
@@ -149,7 +148,7 @@ import { firebaseConfig } from "./firebase-config.js";
     url.search = ""; url.searchParams.set("love", id);
     shareUrl.value = url.toString(); shareCard.hidden = false;
     dashboard.dataset.campaignId = id; dashboard.hidden = false; $("#delete-link").hidden = false;
-    dashboardNote.textContent = "Temporary account: " + creatorName + ". Link expires in 7 days. This browser keeps a local copy.";
+    dashboardNote.textContent = "Temporary account: " + creatorName + ". This link has no automatic 7-day expiry. Keep this browser data safe.";
     message(creatorMessage, "Your love link is ready. Copy it and share it ❤️", "success");
     await refreshDashboard();
   }
@@ -232,6 +231,22 @@ import { firebaseConfig } from "./firebase-config.js";
     try { await navigator.clipboard.writeText(shareUrl.value); message(creatorMessage, "Link copied! Share it with care ❤️", "success"); }
     catch (_) { shareUrl.focus(); shareUrl.select(); message(creatorMessage, "Select and copy the link from the box above.", "error"); }
   });
+  async function confirmCreateCampaign() {
+    if (!pendingCampaign) { accountNoticeModal.hidden = true; return; }
+    const details = pendingCampaign;
+    pendingCampaign = null;
+    accountNoticeModal.hidden = true;
+    try { await createCampaign(details.creatorName, details.loveName, details.question); }
+    catch (error) {
+      console.error(error);
+      message(creatorMessage, "Could not create link (" + (error.code || error.message || "unknown error") + "). Check Firebase Authentication and Firestore rules.", "error");
+    }
+  }
+  $("#account-notice-ok").addEventListener("click", confirmCreateCampaign);
+  $("#account-notice-cancel").addEventListener("click", () => { pendingCampaign = null; accountNoticeModal.hidden = true; });
+  $("#account-notice-close").addEventListener("click", () => { pendingCampaign = null; accountNoticeModal.hidden = true; });
+  accountNoticeModal.addEventListener("click", (event) => { if (event.target === accountNoticeModal) { pendingCampaign = null; accountNoticeModal.hidden = true; } });
+
   $("#refresh-dashboard").addEventListener("click", () => refreshDashboard().catch((error) => {
     console.error(error);
     dashboardNote.textContent = "Could not refresh: " + (error.code || error.message || "unknown error");
@@ -341,7 +356,7 @@ import { firebaseConfig } from "./firebase-config.js";
         $("#creator-name").value = local.creatorName || $("#creator-name").value;
         $("#love-name").value = local.loveName || "";
         $("#question-choice").value = local.question || "Do You Love Me?";
-        dashboardNote.textContent = "Local saved link for " + local.loveName + ". Cloud link expires: " + new Date(local.expiresAt).toLocaleString() + ".";
+  dashboardNote.textContent = "Local saved link for " + local.loveName + ". This link has no automatic 7-day expiry.";
         if (currentUser) await refreshDashboard();
       }
     }).catch((error) => { console.error(error); message(creatorMessage, "Firebase could not start. Check the config file.", "error"); });
