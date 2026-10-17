@@ -209,6 +209,12 @@ import { firebaseConfig } from "./firebase-config.js";
     if (yesSubmitted) return;
     yesSubmitted = true; stage.hidden = true;
     if (music) { music.pause(); music.currentTime = 0; }
+    const loveMusic = new Audio("Love-me.mp3");
+    loveMusic.loop = true;
+    loveMusic.volume = 0.45;
+    window.__loveMeResultMusic = loveMusic;
+    const musicPromise = loveMusic.play();
+    if (musicPromise && musicPromise.catch) musicPromise.catch((error) => console.warn("Love-me.mp3 playback was blocked or the file was unavailable", error));
     result.hidden = false;
     $("#question-card").hidden = true;
     const video = result.querySelector("video");
