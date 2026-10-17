@@ -1,46 +1,70 @@
-const questionContainer = document.querySelector(".question-container");
-const resultContainer = document.querySelector(".result-container");
-const gifResult = document.querySelector(".gif-result");
-const heartLoader = document.querySelector(".cssload-main");
-const yesBtn = document.querySelector(".js-yes-btn");
-const noBtn = document.querySelector(".js-no-btn");
+(() => {
+  "use strict";
 
-// Function to play background music
-function playBackgroundMusic() {
+  const questionContainer = document.querySelector(".question-container");
+  const resultContainer = document.querySelector(".result-container");
+  const gifResult = document.querySelector(".gif-result");
+  const heartLoader = document.querySelector(".cssload-main");
+  const yesBtn = document.querySelector(".js-yes-btn");
+  const noBtn = document.querySelector(".js-no-btn");
   const backgroundMusic = document.getElementById("background-music");
-  if (backgroundMusic && backgroundMusic.paused) {
-    backgroundMusic.play().catch(err => {
-      console.log("Audio playback failed:", err);
-    });
+
+  if (!questionContainer || !resultContainer || !yesBtn || !noBtn || !heartLoader) {
+    console.error("Love-me: required page elements are missing.");
+    return;
   }
-}
 
-// /change the postion of no button
-noBtn.addEventListener("mouseover", () => {
-  const newX = Math.floor(Math.random() * questionContainer.offsetWidth);
-  const newY = Math.floor(Math.random() * questionContainer.offsetWidth);
+  let answered = false;
 
-  noBtn.style.left = `${newX}px`;
-  noBtn.style.top = `${newY}px`;
-});
+  function playBackgroundMusic() {
+    if (!backgroundMusic || !backgroundMusic.paused) return;
+    const playback = backgroundMusic.play();
+    if (playback && typeof playback.catch === "function") {
+      playback.catch(() => {
+        // Browsers may block audio until a user gesture; the page still works.
+      });
+    }
+  }
 
-// yes button functionality
+  function moveNoButton() {
+    const area = questionContainer.getBoundingClientRect();
+    const button = noBtn.getBoundingClientRect();
+    const padding = 8;
+    const maxX = Math.max(padding, area.width - button.width - padding);
+    const maxY = Math.max(padding, area.height - button.height - padding);
+    noBtn.style.position = "absolute";
+    noBtn.style.left = `${padding + Math.random() * (maxX - padding)}px`;
+    noBtn.style.top = `${padding + Math.random() * (maxY - padding)}px`;
+    noBtn.style.right = "auto";
+  }
 
-yesBtn.addEventListener("click", () => {
-  questionContainer.style.display = "none";
-  heartLoader.style.display = "inherit";
+  noBtn.addEventListener("pointerenter", (event) => {
+    if (!answered && event.pointerType === "mouse") moveNoButton();
+  });
 
-  // Start background music on user interaction
-  playBackgroundMusic();
+  noBtn.addEventListener("touchstart", () => {
+    if (!answered) moveNoButton();
+  }, { passive: true });
 
-  const timeoutId = setTimeout(() => {
-    heartLoader.style.display = "none";
-    resultContainer.style.display = "inherit";
-    gifResult.play();
-  }, 3000);
-});
+  noBtn.addEventListener("click", () => {
+    playBackgroundMusic();
+  });
 
-// Also try to play music on any user interaction with the no button
-noBtn.addEventListener("click", () => {
-  playBackgroundMusic();
-});
+  yesBtn.addEventListener("click", () => {
+    if (answered) return;
+    answered = true;
+    questionContainer.hidden = true;
+    heartLoader.style.display = "block";
+    playBackgroundMusic();
+
+    window.setTimeout(() => {
+      heartLoader.style.display = "none";
+      resultContainer.style.display = "block";
+      if (gifResult) {
+        gifResult.muted = true;
+        const playback = gifResult.play();
+        if (playback && typeof playback.catch === "function") playback.catch(() => {});
+      }
+    }, 1800);
+  });
+})();
