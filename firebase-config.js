@@ -2,7 +2,7 @@
 // Replace YOUR_FIREBASE_API_KEY with the Web API key from Firebase Console.
 // Browser config is public by design; never add service-account credentials here.
 export const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
+  apiKey: "AIzaSyBdFADDci2DSbCzEOkOD3KE5YYLKkxfc60",
   authDomain: "all-in-a5f3b.firebaseapp.com",
   projectId: "all-in-a5f3b",
   storageBucket: "all-in-a5f3b.firebasestorage.app",
