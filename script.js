@@ -26,7 +26,7 @@ import { firebaseConfig } from "./firebase-config.js";
   const result = $("#recipient-result");
   const detailsForm = $("#recipient-details");
   let app = null, auth = null, db = null, currentUser = null;
-  let campaignId = null, campaign = null, visitorId = null, yesSubmitted = false, noAttempts = 0;
+  let campaignId = null, campaign = null, visitorId = null, yesSubmitted = false;
   let firebaseReady = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.apiKey !== "YOUR_API_KEY");
 
   function message(element, text, kind = "") {
@@ -83,8 +83,14 @@ import { firebaseConfig } from "./firebase-config.js";
   async function recordEvent(type, extra = {}) {
     if (!db || !campaignId || !visitorId) return;
     try {
+      const interactionKey = "love-me-interacted-" + campaignId + "-" + visitorId;
+      let isRepeat = false;
+      try {
+        isRepeat = localStorage.getItem(interactionKey) === "1";
+        if (["yes", "no_attempt", "details"].includes(type)) localStorage.setItem(interactionKey, "1");
+      } catch (_) {}
       await addDoc(collection(db, "campaigns", campaignId, "events"), {
-        type, visitorId, isRepeat: Boolean(browserVisitorId(campaignId).returning),
+        type, visitorId, isRepeat,
         createdAt: serverTimestamp(),
         recipientName: extra.recipientName || "",
         contact: extra.contact || ""
@@ -212,10 +218,9 @@ import { firebaseConfig } from "./firebase-config.js";
   signOutButton.addEventListener("click", () => auth && signOut(auth));
   $("#refresh-dashboard").addEventListener("click", () => refreshDashboard().catch(console.error));
 
-  noButton.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") { noAttempts++; recordEvent("no_attempt"); moveNoButton(); } });
-  noButton.addEventListener("pointerdown", (event) => { event.preventDefault(); noAttempts++; recordEvent("no_attempt"); moveNoButton(); });
-  noButton.addEventListener("touchstart", (event) => { event.preventDefault(); noAttempts++; recordEvent("no_attempt"); moveNoButton(); }, { passive: false });
-  noButton.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); noAttempts++; recordEvent("no_attempt"); moveNoButton(); });
+  noButton.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") moveNoButton(); });
+  noButton.addEventListener("pointerdown", (event) => { event.preventDefault(); recordEvent("no_attempt"); moveNoButton(); });
+  noButton.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); if (event.detail === 0) recordEvent("no_attempt"); moveNoButton(); });
   yesButton.addEventListener("click", async () => {
     if (yesSubmitted) { await recordEvent("yes"); return; }
     yesSubmitted = true;
