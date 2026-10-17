@@ -13,6 +13,8 @@ import { firebaseConfig } from "./firebase-config.js";
   const noButton = $("#no-button"), yesButton = $("#yes-button"), stage = $("#button-stage"), result = $("#recipient-result");
   const detailsForm = $("#recipient-details");
   const quickMenu = $("#quick-menu"), quickMenuToggle = $("#quick-menu-toggle"), quickMenuPanel = $("#quick-menu-panel"), feedbackModal = $("#feedback-modal");
+  const accountNotice = $("#account-notice-backdrop");
+  let pendingCreate = null;
   let app = null, auth = null, db = null, currentUser = null, campaignId = null, campaign = null, visitorId = null, yesSubmitted = false;
   const LOCAL_CAMPAIGNS_KEY = "love-me-local-campaigns-v2";
   const firebaseReady = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && !["YOUR_API_KEY", "YOUR_FIREBASE_API_KEY"].includes(firebaseConfig.apiKey));
@@ -202,15 +204,29 @@ import { firebaseConfig } from "./firebase-config.js";
     }
   }
 
-  createForm.addEventListener("submit", async (event) => {
+  createForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const creatorName = $("#creator-name").value.trim(), loveName = $("#love-name").value.trim(), question = $("#question-choice").value;
     if (!creatorName || !loveName) return;
-    try {
-      localStorage.setItem("love-me-creator-name", creatorName);
-      await createCampaign(creatorName, loveName, question);
-    } catch (error) { console.error(error); message(creatorMessage, "Could not create link (" + (error.code || error.message || "unknown error") + "). Enable Anonymous Authentication and publish the current Firestore rules.", "error"); }
+    pendingCreate = { creatorName, loveName, question };
+    accountNotice.hidden = false;
+    $("#account-notice-ok").focus();
   });
+  $("#account-notice-cancel").addEventListener("click", () => { pendingCreate = null; accountNotice.hidden = true; });
+  $("#account-notice-ok").addEventListener("click", async () => {
+    if (!pendingCreate) { accountNotice.hidden = true; return; }
+    const data = pendingCreate;
+    pendingCreate = null;
+    accountNotice.hidden = true;
+    try {
+      localStorage.setItem("love-me-creator-name", data.creatorName);
+      await createCampaign(data.creatorName, data.loveName, data.question);
+    } catch (error) {
+      console.error(error);
+      message(creatorMessage, "Could not create link (" + (error.code || error.message || "unknown error") + "). Check Firebase config, Anonymous Authentication, and published Firestore rules.", "error");
+    }
+  });
+  accountNotice.addEventListener("click", (event) => { if (event.target === accountNotice) { pendingCreate = null; accountNotice.hidden = true; } });
   try { $("#creator-name").value = localStorage.getItem("love-me-creator-name") || ""; } catch (_) {}
   $("#copy-link").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(shareUrl.value); message(creatorMessage, "Link copied! Share it with care ❤️", "success"); }
