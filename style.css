@@ -50,3 +50,6 @@ body.recipient-mode{min-height:100svh;height:100svh;overflow:hidden;padding:clam
 .feedback-form .primary-btn{margin-top:5px}
 @keyframes quick-menu-in{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.quick-menu-panel,.feedback-dialog{animation:none}}
+
+.delete-link-btn{margin-top:12px;border:1px solid #f1b8c5;border-radius:12px;padding:10px 14px;background:#fff4f5;color:#a92b52;font:inherit;font-weight:700}
+.delete-link-btn:active{transform:scale(.99)}
