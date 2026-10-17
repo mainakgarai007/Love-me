@@ -167,7 +167,8 @@ import { firebaseConfig } from "./firebase-config.js";
       message(creatorMessage, "Connecting your temporary account… Please try again in a moment.", "error");
       return;
     }
-    const existingCampaigns = await getUserCampaigns();\n    const activeCount = existingCampaigns.length;
+    const existingCampaigns = await getUserCampaigns();
+    const activeCount = existingCampaigns.length;
     if (activeCount >= 3) {
       message(creatorMessage, "You already have 3 active links. Delete one of your existing links before creating another.", "error");
       return;
@@ -186,9 +187,13 @@ import { firebaseConfig } from "./firebase-config.js";
     dashboard.dataset.campaignId = id; dashboard.hidden = false; $("#delete-link").hidden = false;
     dashboardNote.textContent = "Temporary account: " + creatorName + ". This link has no automatic 7-day expiry. Keep this browser data safe.";
     message(creatorMessage, "Your love link is ready. Copy it and share it ❤️", "success");
-    await refreshDashboard();\n    await refreshUserLinks();\n  }\n  async function refreshDashboard() {
+    await refreshDashboard();
+    await refreshUserLinks();
+  }
+  async function refreshDashboard() {
     const id = dashboard.dataset.campaignId || campaignId;\n    if (!id || !db || !currentUser) { await refreshUserLinks(); return; }
-    await refreshUserLinks();\n    const campaignSnap = await getDoc(doc(db, "campaigns", id));
+    await refreshUserLinks();
+    const campaignSnap = await getDoc(doc(db, "campaigns", id));
     if (!campaignSnap.exists() || campaignSnap.data().ownerUid !== currentUser.uid) {
       dashboardNote.textContent = "This dashboard is available only in the browser that created the link.";
       stats.hidden = true; historyWrap.hidden = true; return;
@@ -304,7 +309,9 @@ import { firebaseConfig } from "./firebase-config.js";
         localStorage.removeItem("love-me-local-events-" + id);
         if (localStorage.getItem("love-me-last-campaign-id") === id) localStorage.removeItem("love-me-last-campaign-id");
       } catch (_) {}
-      dashboard.dataset.campaignId = ""; campaignId = null;\n      shareCard.hidden = true; dashboard.hidden = false; $("#delete-link").hidden = true;\n      await refreshUserLinks();
+      dashboard.dataset.campaignId = ""; campaignId = null;
+      shareCard.hidden = true; dashboard.hidden = false; $("#delete-link").hidden = true;
+      await refreshUserLinks();
       message(creatorMessage, "Link deleted from this phone. If Firebase deletion was blocked, cloud data may still remain.", "success");
     } catch (error) {
       console.error("Delete link failed", error);
@@ -380,7 +387,8 @@ import { firebaseConfig } from "./firebase-config.js";
     startApp().then(async () => {
       const lastId = (() => { try { return localStorage.getItem("love-me-last-campaign-id"); } catch (_) { return null; } })();
       const local = readLocalCampaigns().find((item) => item.id === lastId);
-      if (local) {\n        dashboard.dataset.campaignId = local.id;
+      if (local) {
+        dashboard.dataset.campaignId = local.id;
         shareUrl.value = new URL("?love=" + encodeURIComponent(local.id), window.location.href).toString();
         shareCard.hidden = false;
         dashboard.hidden = false;
@@ -388,7 +396,8 @@ import { firebaseConfig } from "./firebase-config.js";
         $("#love-name").value = local.loveName || "";
         $("#question-choice").value = local.question || "Do You Love Me?";
   dashboardNote.textContent = "Local saved link for " + local.loveName + ". This link has no automatic 7-day expiry.";
-        if (currentUser) await refreshDashboard();\n      } else { await refreshUserLinks(); }
+        if (currentUser) await refreshDashboard();
+      } else { await refreshUserLinks(); }
     }).catch((error) => { console.error(error); message(creatorMessage, "Firebase could not start. Check the config file.", "error"); });
   }
 })();
