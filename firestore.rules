@@ -7,42 +7,44 @@ service cloud.firestore {
         get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerUid == request.auth.uid;
     }
 
-    // Existing generic public read-only documents.
     match /public/{docId} {
       allow read: if true;
       allow write: if false;
     }
 
-    // Shared starter: a user can access only their own UID paths.
-    // appId is organizational, not a security boundary between client apps.
     match /users/{userId}/apps/{appId}/data/{docId} {
-      allow read, create, update, delete:
-        if signedIn() && request.auth.uid == userId;
+      allow read, create, update, delete: if signedIn() && request.auth.uid == userId;
     }
-    // Keep compatibility with the original diagnostic path.
     match /users/{userId}/data/{docId} {
-      allow read, create, update, delete:
-        if signedIn() && request.auth.uid == userId;
+      allow read, create, update, delete: if signedIn() && request.auth.uid == userId;
     }
 
-    // Love-me campaigns.
     match /campaigns/{campaignId} {
-      // Public share links can read active campaigns; owners can read their own.
-      allow get: if resource.data.active == true ||
-        (signedIn() && resource.data.ownerUid == request.auth.uid);
-      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      // Share links stop working after the seven-day expiry.
+      allow get: if resource.data.expiresAt > request.time &&
+        (resource.data.active == true || (signedIn() && resource.data.ownerUid == request.auth.uid));
+      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid
+        && resource.data.expiresAt > request.time;
       allow create: if signedIn()
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['ownerUid', 'loveName', 'active', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['ownerUid', 'creatorName', 'loveName', 'question', 'active', 'createdAt', 'expiresAt'])
+        && request.resource.data.creatorName is string
+        && request.resource.data.creatorName.size() > 0
+        && request.resource.data.creatorName.size() <= 60
         && request.resource.data.loveName is string
         && request.resource.data.loveName.size() > 0
         && request.resource.data.loveName.size() <= 60
-        && request.resource.data.active == true;
+        && request.resource.data.question in ['Do You Like Me?', 'Do You Love Me?']
+        && request.resource.data.active == true
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(8, 'd');
       allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
       match /events/{eventId} {
         allow create: if get(/databases/$(database)/documents/campaigns/$(campaignId)).data.active == true
-          && request.resource.data.keys().hasOnly(['type', 'visitorId', 'isRepeat', 'createdAt', 'recipientName', 'contact'])
+          && get(/databases/$(database)/documents/campaigns/$(campaignId)).data.expiresAt > request.time
+          && request.resource.data.keys().hasOnly(['type', 'visitorId', 'isRepeat', 'createdAt', 'recipientName', 'contact', 'campaignId', 'expiresAt'])
           && request.resource.data.type in ['visit', 'yes', 'no_attempt', 'details']
           && request.resource.data.visitorId is string
           && request.resource.data.visitorId.size() <= 80
@@ -50,7 +52,11 @@ service cloud.firestore {
           && request.resource.data.recipientName is string
           && request.resource.data.recipientName.size() <= 60
           && request.resource.data.contact is string
-          && request.resource.data.contact.size() <= 120;
+          && request.resource.data.contact.size() <= 120
+          && request.resource.data.campaignId == campaignId
+          && request.resource.data.expiresAt is timestamp
+          && request.resource.data.expiresAt > request.time
+          && request.resource.data.expiresAt <= request.time + duration.value(8, 'd');
         allow read: if ownsCampaign(campaignId);
         allow update, delete: if false;
       }
