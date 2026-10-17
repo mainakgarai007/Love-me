@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -27,7 +27,7 @@ import { firebaseConfig } from "./firebase-config.js";
   const detailsForm = $("#recipient-details");
   let app = null, auth = null, db = null, currentUser = null;
   let campaignId = null, campaign = null, visitorId = null, yesSubmitted = false;
-  let firebaseReady = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.apiKey !== "YOUR_API_KEY");
+  let firebaseReady = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.apiKey !== "YOUR_API_KEY" && firebaseConfig.apiKey !== "YOUR_FIREBASE_API_KEY");
 
   function message(element, text, kind = "") {
     if (!element) return;
@@ -119,8 +119,7 @@ import { firebaseConfig } from "./firebase-config.js";
       return;
     }
     if (!currentUser) {
-      message(creatorMessage, "Sign in with Google first, then create your link.", "error");
-      signInButton.focus();
+      message(creatorMessage, "Connecting without login. Please wait a moment, then try again.", "error");
       return;
     }
     const id = safeId().replaceAll("-", "").slice(0, 18);
@@ -192,11 +191,20 @@ import { firebaseConfig } from "./firebase-config.js";
     db = getFirestore(app);
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
-      signInButton.hidden = Boolean(user);
-      signOutButton.hidden = !user;
-      dashboardNote.textContent = user ? "Signed in. Only the link creator can view saved history." : "Sign in with the Google account connected to your Firebase project to view saved responses.";
+      signInButton.hidden = true;
+      signOutButton.hidden = true;
+      dashboardNote.textContent = user ? "Connected without a visible login. Keep this browser data to retain access to your dashboard." : "Connecting without login…";
       if (user && dashboard.dataset.campaignId) await refreshDashboard();
     });
+    // Use anonymous auth silently; there is no login screen.
+    if (!auth.currentUser) {
+      try {
+        await signInAnonymously(auth);
+      } catch (error) {
+        console.error("Anonymous sign-in failed", error);
+        message(creatorMessage, "Could not connect without login. Check that Anonymous sign-in is enabled and Firestore rules are published.", "error");
+      }
+    }
   }
 
   createForm.addEventListener("submit", async (event) => {
@@ -210,12 +218,7 @@ import { firebaseConfig } from "./firebase-config.js";
     try { await navigator.clipboard.writeText(shareUrl.value); message(creatorMessage, "Link copied! Share it with care ❤️", "success"); }
     catch (_) { shareUrl.focus(); shareUrl.select(); message(creatorMessage, "Select and copy the link from the box above.", "error"); }
   });
-  signInButton.addEventListener("click", async () => {
-    if (!auth) return;
-    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-    catch (error) { console.error(error); message(creatorMessage, "Sign-in didn't finish. Check that Google sign-in is enabled in Firebase Authentication.", "error"); }
-  });
-  signOutButton.addEventListener("click", () => auth && signOut(auth));
+  // Login and sign-out controls are intentionally unused: Love-me works without visible login.
   $("#refresh-dashboard").addEventListener("click", () => refreshDashboard().catch(console.error));
 
   noButton.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") moveNoButton(); });
