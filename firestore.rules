@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function ownsCampaign(campaignId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerUid == request.auth.uid;
+    }
+
+    match /campaigns/{campaignId} {
+      // Public share page can read only the campaign's public name/status.
+      allow get: if resource.data.active == true ||
+        (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['ownerUid', 'loveName', 'active', 'createdAt'])
+        && request.resource.data.loveName is string
+        && request.resource.data.loveName.size() > 0
+        && request.resource.data.loveName.size() <= 60
+        && request.resource.data.active == true;
+      allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+
+      match /events/{eventId} {
+        // Visitors can submit a limited event, but only the campaign owner can read it.
+        allow create: if get(/databases/$(database)/documents/campaigns/$(campaignId)).data.active == true
+          && request.resource.data.keys().hasOnly(['type', 'visitorId', 'isRepeat', 'createdAt', 'recipientName', 'contact'])
+          && request.resource.data.type in ['visit', 'yes', 'no_attempt', 'details']
+          && request.resource.data.visitorId is string
+          && request.resource.data.visitorId.size() <= 80
+          && request.resource.data.isRepeat is bool
+          && request.resource.data.recipientName is string
+          && request.resource.data.recipientName.size() <= 60
+          && request.resource.data.contact is string
+          && request.resource.data.contact.size() <= 120;
+        allow read: if ownsCampaign(campaignId);
+        allow update, delete: if false;
+      }
+    }
+  }
+}
