@@ -17,6 +17,19 @@
       <div><p class="eyebrow">A little courage, a little love</p><h1>Love-me</h1></div>
     </header>
 
+    <div id="account-notice-backdrop" class="notice-backdrop" hidden>
+      <section class="notice-dialog" role="dialog" aria-modal="true" aria-labelledby="account-notice-title">
+        <div class="notice-heart" aria-hidden="true">💗</div>
+        <h2 id="account-notice-title">Before you create your link</h2>
+        <p>With Anonymous Authentication auto-cleanup enabled, Firebase may automatically delete anonymous accounts that are older than 30 days.</p>
+        <p class="notice-warning"><strong>Please note:</strong> this only deletes the anonymous sign-in account. It does <strong>not</strong> automatically delete your Love-me links or Firestore responses.</p>
+        <div class="notice-actions">
+          <button id="account-notice-cancel" class="secondary-btn" type="button">Cancel</button>
+          <button id="account-notice-ok" class="primary-btn" type="button">OK, create link</button>
+        </div>
+      </section>
+    </div>
+
     <section id="creator-view" class="panel creator-panel">
       <p class="eyebrow">YOUR LITTLE LOVE PAGE</p>
       <h2>Make a moment memorable. <span>❤️</span></h2>
