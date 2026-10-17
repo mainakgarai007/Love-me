@@ -1,51 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap"
-      rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-    <title>Do you love me?</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#fff4f8" />
+  <title>Love-me ❤️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <main class="app-shell">
+    <header class="brand">
+      <div class="brand-mark" aria-hidden="true">♡</div>
+      <div><p class="eyebrow">A little courage, a little love</p><h1>Love-me</h1></div>
+    </header>
 
-<div class="question-container container">
-<video class="local-gif" src="Reply me love.mp4" autoplay muted loop></video>
-  <h2 class="question">Do you love me?</h2>
-  <div class="button-container">
-    <button class="yes-btn btn js-yes-btn">Yes</button>
-    <button class="no-btn btn js-no-btn">No</button>
-  </div>
-</div>
-<div class="result-container container">
-  <video class="gif-result" src="Love me.mp4" autoplay loop></video>
-  <h2>I knew it😍!</h2>
-</div>
+    <section id="creator-view" class="panel creator-panel">
+      <p class="eyebrow">YOUR LITTLE LOVE PAGE</p>
+      <h2>Make a moment memorable. <span>❤️</span></h2>
+      <p class="intro">Create a personal link, share it with someone, and see the responses in your private dashboard.</p>
+      <form id="create-form" class="create-form">
+        <label for="love-name">Enter your love one's name</label>
+        <input id="love-name" name="loveName" maxlength="60" placeholder="Their name…" autocomplete="off" required />
+        <button class="primary-btn" type="submit">Create my love link <span>→</span></button>
+      </form>
+      <div id="creator-message" class="message" role="status" aria-live="polite"></div>
+      <section id="share-card" class="share-card" hidden>
+        <p class="eyebrow">YOUR SHARE LINK</p>
+        <div class="share-line"><input id="share-url" aria-label="Share link" readonly /><button id="copy-link" class="secondary-btn" type="button">Copy</button></div>
+        <p class="small-note">Anyone with this link can open the love page. Keep your creator dashboard private.</p>
+      </section>
 
-<div class="cssload-main">
-  <div class="cssload-heart">
-    <span class="cssload-heartL"></span>
-    <span class="cssload-heartR"></span>
-    <span class="cssload-square"></span>
-  </div>
-  <div class="cssload-shadow"></div>
-</div>
+      <section id="dashboard" class="dashboard" hidden>
+        <div class="dashboard-heading"><div><p class="eyebrow">PRIVATE CREATOR VIEW</p><h3>Response dashboard</h3></div><button id="refresh-dashboard" class="secondary-btn" type="button">Refresh</button></div>
+        <p id="dashboard-note" class="small-note">Sign in with the Google account connected to your Firebase project to view saved responses.</p>
+        <button id="sign-in" class="secondary-btn" type="button">Sign in to view dashboard</button>
+        <button id="sign-out" class="text-btn" type="button" hidden>Sign out</button>
+        <div id="stats" class="stats-grid" hidden>
+          <article class="stat-card"><span class="stat-icon">👀</span><strong id="unique-count">0</strong><span>Unique visitors*</span></article>
+          <article class="stat-card"><span class="stat-icon">💗</span><strong id="yes-count">0</strong><span>Yes responses</span></article>
+          <article class="stat-card"><span class="stat-icon">🙈</span><strong id="no-count">0</strong><span>No attempts</span></article>
+          <article class="stat-card"><span class="stat-icon">🔁</span><strong id="repeat-count">0</strong><span>Repeat attempts</span></article>
+        </div>
+        <p class="small-note" id="stats-footnote" hidden>*Estimated using a random browser ID; it cannot reliably identify a person or a physical phone.</p>
+        <div id="history-wrap" hidden><h4>Visitor history</h4><div id="history" class="history-list"></div></div>
+      </section>
+    </section>
 
-<footer class="footer">
-  <p><a href="mailto:mainakgarai007@gmail.com" class="email-link">mainakgarai007@gmail.com</a></p>
-</footer>
+    <section id="recipient-view" class="recipient-panel" hidden>
+      <div class="love-card">
+        <video class="local-gif" src="Reply me love.mp4" autoplay muted loop playsinline aria-label="A little love animation"></video>
+        <p class="eyebrow">A LITTLE QUESTION FOR YOU</p>
+        <h2 id="recipient-question">Do you love me?</h2>
+        <p class="recipient-caption" id="recipient-caption">A tiny question, just for you.</p>
+        <div class="button-stage" id="button-stage">
+          <button id="yes-button" class="primary-btn answer-btn" type="button">Yes 💗</button>
+          <button id="no-button" class="no-btn answer-btn" type="button">No 🙈</button>
+        </div>
+      </div>
+      <section id="recipient-result" class="love-card result-card" hidden>
+        <video class="gif-result" src="Love me.mp4" loop playsinline muted aria-label="Love-me result animation"></video>
+        <h2>I knew it 😍!</h2>
+        <p>Thanks for answering. You can leave your name if you'd like.</p>
+        <form id="recipient-details" class="details-form">
+          <label for="recipient-name">Your name <span>(optional)</span></label>
+          <input id="recipient-name" maxlength="60" autocomplete="name" placeholder="Your name" />
+          <label for="recipient-contact">Contact info <span>(optional)</span></label>
+          <input id="recipient-contact" maxlength="120" autocomplete="off" placeholder="Only if you want to share it" />
+          <p class="privacy-note">Only submit details you’re comfortable sharing. The page creator may see what you enter.</p>
+          <button class="primary-btn" type="submit">Submit my details</button>
+          <p id="recipient-message" class="message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </section>
 
-<!-- Background music -->
-<audio id="background-music" loop>
-  <source src="bg-music-h-not-l.mp3" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
+    <section id="invalid-view" class="panel" hidden><h2>Link not found 💌</h2><p>This love link may be incomplete or no longer active.</p></section>
+  </main>
 
-<script src="script.js"></script>
-
+  <footer class="footer"><span>Made with a little courage and lots of ❤️</span></footer>
+  <audio id="background-music" loop preload="none"><source src="bg-music-h-not-l.mp3" type="audio/mpeg" /></audio>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
