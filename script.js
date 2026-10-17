@@ -191,7 +191,8 @@ import { firebaseConfig } from "./firebase-config.js";
     await refreshUserLinks();
   }
   async function refreshDashboard() {
-    const id = dashboard.dataset.campaignId || campaignId;\n    if (!id || !db || !currentUser) { await refreshUserLinks(); return; }
+    const id = dashboard.dataset.campaignId || campaignId;
+    if (!id || !db || !currentUser) { await refreshUserLinks(); return; }
     await refreshUserLinks();
     const campaignSnap = await getDoc(doc(db, "campaigns", id));
     if (!campaignSnap.exists() || campaignSnap.data().ownerUid !== currentUser.uid) {
