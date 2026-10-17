@@ -84,6 +84,30 @@
     </section>
 
     <section id="invalid-view" class="panel" hidden><h2>Link not found 💌</h2><p>This love link may be incomplete, expired, or no longer active.</p></section>
+
+    <div id="quick-menu" class="quick-menu" hidden>
+      <button id="quick-menu-toggle" class="quick-menu-toggle" type="button" aria-expanded="false" aria-controls="quick-menu-panel" aria-label="Open quick menu">↑</button>
+      <section id="quick-menu-panel" class="quick-menu-panel" aria-label="Quick menu" hidden>
+        <div class="quick-menu-heading"><strong>Quick menu ✨</strong><button id="quick-menu-close" class="quick-menu-close" type="button" aria-label="Close menu">×</button></div>
+        <button id="create-own-link" class="quick-menu-option" type="button"><span>💗</span><span><strong>Create Your Own</strong><small>Make your own love link</small></span><span aria-hidden="true">›</span></button>
+        <button id="open-feedback" class="quick-menu-option" type="button"><span>💌</span><span><strong>Feedback</strong><small>Share an idea or report a problem</small></span><span aria-hidden="true">›</span></button>
+      </section>
+    </div>
+
+    <div id="feedback-modal" class="feedback-backdrop" hidden>
+      <section class="feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+        <div class="quick-menu-heading"><strong id="feedback-title">Send feedback</strong><button id="feedback-close" class="quick-menu-close" type="button" aria-label="Close feedback">×</button></div>
+        <p class="small-note">Tell us what worked, what broke, or what feature you want next.</p>
+        <form id="feedback-form" class="feedback-form">
+          <label for="feedback-message">Your feedback</label>
+          <textarea id="feedback-message" rows="4" maxlength="1500" placeholder="Write your feedback here…" required></textarea>
+          <label for="feedback-contact">Contact or social link (optional)</label>
+          <input id="feedback-contact" maxlength="160" placeholder="Email or social profile link" />
+          <p class="privacy-note">Your message will open as a GitHub issue for the Love-me project. Avoid sharing private information.</p>
+          <button class="primary-btn" type="submit">Continue to feedback page ↗</button>
+        </form>
+      </section>
+    </div>
   </main>
 
   <footer class="footer" id="footer"><span>Made with a little courage and lots of ❤️</span></footer>
