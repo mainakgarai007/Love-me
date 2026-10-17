@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, query, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, query, where, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 (() => {
@@ -12,6 +12,7 @@ import { firebaseConfig } from "./firebase-config.js";
   const stats = $("#stats"), historyWrap = $("#history-wrap"), music = $("#background-music");
   const noButton = $("#no-button"), yesButton = $("#yes-button"), stage = $("#button-stage"), result = $("#recipient-result");
   const detailsForm = $("#recipient-details");
+  const quickMenu = $("#quick-menu"), quickMenuToggle = $("#quick-menu-toggle"), quickMenuPanel = $("#quick-menu-panel"), feedbackModal = $("#feedback-modal");
   let app = null, auth = null, db = null, currentUser = null, campaignId = null, campaign = null, visitorId = null, yesSubmitted = false;
   const LOCAL_CAMPAIGNS_KEY = "love-me-local-campaigns-v2";
   const firebaseReady = Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && !["YOUR_API_KEY", "YOUR_FIREBASE_API_KEY"].includes(firebaseConfig.apiKey));
@@ -114,9 +115,20 @@ import { firebaseConfig } from "./firebase-config.js";
     await recordEvent("visit");
     startOldMusic();
   }
+  async function countActiveCampaigns() {
+    if (!db || !currentUser) return readLocalCampaigns().filter(item => new Date(item.expiresAt).getTime() > Date.now()).length;
+    const activeQuery = query(collection(db, "campaigns"), where("ownerUid", "==", currentUser.uid), where("expiresAt", ">", Timestamp.now()));
+    const snapshot = await getDocs(activeQuery);
+    return snapshot.size;
+  }
   async function createCampaign(creatorName, loveName, question) {
     if (!auth || !db || !currentUser) {
       message(creatorMessage, "Connecting your temporary account… Please try again in a moment.", "error");
+      return;
+    }
+    const activeCount = await countActiveCampaigns();
+    if (activeCount >= 3) {
+      message(creatorMessage, "You already have 3 active links. Wait for one to expire before creating another.", "error");
       return;
     }
     const id = safeId().replaceAll("-", "").slice(0, 18);
@@ -202,6 +214,38 @@ import { firebaseConfig } from "./firebase-config.js";
     catch (_) { shareUrl.focus(); shareUrl.select(); message(creatorMessage, "Select and copy the link from the box above.", "error"); }
   });
   $("#refresh-dashboard").addEventListener("click", () => refreshDashboard().catch(console.error));
+
+  function setQuickMenuOpen(open) {
+    quickMenu.classList.toggle("is-open", open);
+    quickMenuPanel.hidden = !open;
+    quickMenuToggle.setAttribute("aria-expanded", String(open));
+    quickMenuToggle.setAttribute("aria-label", open ? "Close quick menu" : "Open quick menu");
+  }
+  quickMenuToggle.addEventListener("click", () => setQuickMenuOpen(quickMenuPanel.hidden));
+  $("#quick-menu-close").addEventListener("click", () => setQuickMenuOpen(false));
+  $("#create-own-link").addEventListener("click", () => {
+    const url = new URL(window.location.href);
+    url.search = "";
+    window.location.href = url.toString();
+  });
+  $("#open-feedback").addEventListener("click", () => {
+    setQuickMenuOpen(false);
+    feedbackModal.hidden = false;
+    $("#feedback-message").focus();
+  });
+  $("#feedback-close").addEventListener("click", () => { feedbackModal.hidden = true; });
+  feedbackModal.addEventListener("click", (event) => { if (event.target === feedbackModal) feedbackModal.hidden = true; });
+  $("#feedback-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const feedback = $("#feedback-message").value.trim();
+    const contact = $("#feedback-contact").value.trim();
+    if (!feedback) return;
+    const title = "Love-me feedback";
+    const body = feedback + (contact ? "\\n\\nOptional contact/social link: " + contact : "") + "\\n\\nSent from Love-me website.";
+    const url = "https://github.com/mainakgarai007/Love-me/issues/new?title=" + encodeURIComponent(title) + "&body=" + encodeURIComponent(body);
+    window.open(url, "_blank", "noopener,noreferrer");
+    feedbackModal.hidden = true;
+  });
   noButton.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") moveNoButton(); });
   noButton.addEventListener("pointerdown", (event) => { event.preventDefault(); recordEvent("no_attempt"); moveNoButton(); });
   noButton.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); if (event.detail === 0) recordEvent("no_attempt"); moveNoButton(); });
