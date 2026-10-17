@@ -7,8 +7,27 @@ service cloud.firestore {
         get(/databases/$(database)/documents/campaigns/$(campaignId)).data.ownerUid == request.auth.uid;
     }
 
+    // Existing generic public read-only documents.
+    match /public/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Shared starter: a user can access only their own UID paths.
+    // appId is organizational, not a security boundary between client apps.
+    match /users/{userId}/apps/{appId}/data/{docId} {
+      allow read, create, update, delete:
+        if signedIn() && request.auth.uid == userId;
+    }
+    // Keep compatibility with the original diagnostic path.
+    match /users/{userId}/data/{docId} {
+      allow read, create, update, delete:
+        if signedIn() && request.auth.uid == userId;
+    }
+
+    // Love-me campaigns.
     match /campaigns/{campaignId} {
-      // Public share page can read only the campaign's public name/status.
+      // Public share links can read active campaigns; owners can read their own.
       allow get: if resource.data.active == true ||
         (signedIn() && resource.data.ownerUid == request.auth.uid);
       allow list: if signedIn() && resource.data.ownerUid == request.auth.uid;
@@ -22,7 +41,6 @@ service cloud.firestore {
       allow update, delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
       match /events/{eventId} {
-        // Visitors can submit a limited event, but only the campaign owner can read it.
         allow create: if get(/databases/$(database)/documents/campaigns/$(campaignId)).data.active == true
           && request.resource.data.keys().hasOnly(['type', 'visitorId', 'isRepeat', 'createdAt', 'recipientName', 'contact'])
           && request.resource.data.type in ['visit', 'yes', 'no_attempt', 'details']
@@ -36,6 +54,10 @@ service cloud.firestore {
         allow read: if ownsCampaign(campaignId);
         allow update, delete: if false;
       }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
