@@ -57,15 +57,18 @@ import { firebaseConfig } from "./firebase-config.js";
   function showCreator() {
     $("#brand").hidden = false; $("#footer").hidden = false;
     creatorView.hidden = false; recipientView.hidden = true; invalidView.hidden = true; dashboard.hidden = false;
+    quickMenu.hidden = false;
   }
   function showRecipient() {
     $("#brand").hidden = true; $("#footer").hidden = true;
     creatorView.hidden = true; recipientView.hidden = false; invalidView.hidden = true;
     document.body.classList.add("recipient-mode");
+    quickMenu.hidden = false;
   }
   function showInvalid() {
     $("#brand").hidden = false; $("#footer").hidden = false;
     creatorView.hidden = true; recipientView.hidden = true; invalidView.hidden = false;
+    quickMenu.hidden = true;
   }
   function startOldMusic() {
     if (!music) return;
