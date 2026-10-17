@@ -108,6 +108,15 @@
       </section>
     </div>
 
+    <div id="account-notice-modal" class="feedback-backdrop" hidden>
+      <section class="feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="account-notice-title">
+        <div class="quick-menu-heading"><strong id="account-notice-title">A quick note about your temporary account</strong><button id="account-notice-close" class="quick-menu-close" type="button" aria-label="Close notice">×</button></div>
+        <p>Love-me uses Firebase anonymous sign-in, so there is no visible login screen. Firebase's “Enable auto-clean-up” setting deletes anonymous authentication accounts older than 30 days.</p>
+        <p><strong>Important:</strong> this setting deletes the anonymous account, not Firestore link or response documents. Your share link may stop letting you manage its dashboard if that account is deleted. Keep your link and response information saved on this browser. Do not enter sensitive personal information.</p>
+        <div class="notice-actions"><button id="account-notice-cancel" class="secondary-btn" type="button">Cancel</button><button id="account-notice-ok" class="primary-btn" type="button">OK, create link</button></div>
+      </section>
+    </div>
+
     <div id="feedback-modal" class="feedback-backdrop" hidden>
       <section class="feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
         <div class="quick-menu-heading"><strong id="feedback-title">Send feedback</strong><button id="feedback-close" class="quick-menu-close" type="button" aria-label="Close feedback">×</button></div>
