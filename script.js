@@ -352,9 +352,7 @@ import { firebaseConfig } from "./firebase-config.js";
     window.open(url, "_blank", "noopener,noreferrer");
     feedbackModal.hidden = true;
   });
-  noButton.addEventListener("pointerenter", (event) => { if (event.pointerType === "mouse") moveNoButton(); });
-  noButton.addEventListener("pointerdown", (event) => { event.preventDefault(); recordEvent("no_attempt"); moveNoButton(); });
-  noButton.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); if (event.detail === 0) recordEvent("no_attempt"); moveNoButton(); });
+  noButton.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); recordEvent("no_attempt"); });
   yesButton.addEventListener("click", async () => {
     if (yesSubmitted) return;
     yesSubmitted = true; stage.hidden = true;
