@@ -119,18 +119,55 @@ import { firebaseConfig } from "./firebase-config.js";
     await recordEvent("visit");
     startOldMusic();
   }
-  async function countActiveCampaigns() {
-    if (!db || !currentUser) return readLocalCampaigns().length;
-    const activeQuery = query(collection(db, "campaigns"), where("ownerUid", "==", currentUser.uid));
-    const snapshot = await getDocs(activeQuery);
-    return snapshot.size;
+  async function getUserCampaigns() {
+    if (!db || !currentUser) return readLocalCampaigns();
+    const campaignsQuery = query(collection(db, "campaigns"), where("ownerUid", "==", currentUser.uid));
+    const snapshot = await getDocs(campaignsQuery);
+    return snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
+      .sort((a, b) => {
+        const ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+        const tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+        return ta - tb;
+      });
+  }
+  async function refreshUserLinks() {
+    const list = $("#user-links"), count = $("#link-count");
+    if (!list || !count) return;
+    let items = [];
+    try { items = await getUserCampaigns(); }
+    catch (error) { console.error("Could not load link list", error); }
+    count.textContent = Math.min(items.length, 3) + "/3";
+    list.replaceChildren();
+    if (!items.length) {
+      const empty = document.createElement("p"); empty.className = "empty-state"; empty.textContent = "You haven't created any links yet.";
+      list.append(empty); return;
+    }
+    items.slice(0, 3).forEach((item, index) => {
+      const row = document.createElement("div"); row.className = "user-link-row" + (item.id === (dashboard.dataset.campaignId || campaignId) ? " is-selected" : "");
+      const select = document.createElement("button"); select.type = "button"; select.className = "user-link-select";
+      select.textContent = (index + 1) + " link · " + (item.loveName || "Special person");
+      select.addEventListener("click", async () => {
+        dashboard.dataset.campaignId = item.id;
+        campaignId = item.id;
+        const url = new URL(window.location.href); url.search = ""; url.searchParams.set("love", item.id);
+        shareUrl.value = url.toString(); shareCard.hidden = false; dashboard.hidden = false; $("#delete-link").hidden = false;
+        await refreshDashboard(); await refreshUserLinks();
+      });
+      const open = document.createElement("button"); open.type = "button"; open.className = "user-link-open"; open.textContent = "↗";
+      open.setAttribute("aria-label", "Open link " + (index + 1));
+      open.addEventListener("click", () => {
+        const url = new URL(window.location.href); url.search = ""; url.searchParams.set("love", item.id);
+        window.open(url.toString(), "_blank", "noopener,noreferrer");
+      });
+      row.append(select, open); list.append(row);
+    });
   }
   async function createCampaign(creatorName, loveName, question) {
     if (!auth || !db || !currentUser) {
       message(creatorMessage, "Connecting your temporary account… Please try again in a moment.", "error");
       return;
     }
-    const activeCount = await countActiveCampaigns();
+    const existingCampaigns = await getUserCampaigns();\n    const activeCount = existingCampaigns.length;
     if (activeCount >= 3) {
       message(creatorMessage, "You already have 3 active links. Delete one of your existing links before creating another.", "error");
       return;
@@ -149,12 +186,9 @@ import { firebaseConfig } from "./firebase-config.js";
     dashboard.dataset.campaignId = id; dashboard.hidden = false; $("#delete-link").hidden = false;
     dashboardNote.textContent = "Temporary account: " + creatorName + ". This link has no automatic 7-day expiry. Keep this browser data safe.";
     message(creatorMessage, "Your love link is ready. Copy it and share it ❤️", "success");
-    await refreshDashboard();
-  }
-  async function refreshDashboard() {
-    const id = dashboard.dataset.campaignId || campaignId;
-    if (!id || !db || !currentUser) return;
-    const campaignSnap = await getDoc(doc(db, "campaigns", id));
+    await refreshDashboard();\n    await refreshUserLinks();\n  }\n  async function refreshDashboard() {
+    const id = dashboard.dataset.campaignId || campaignId;\n    if (!id || !db || !currentUser) { await refreshUserLinks(); return; }
+    await refreshUserLinks();\n    const campaignSnap = await getDoc(doc(db, "campaigns", id));
     if (!campaignSnap.exists() || campaignSnap.data().ownerUid !== currentUser.uid) {
       dashboardNote.textContent = "This dashboard is available only in the browser that created the link.";
       stats.hidden = true; historyWrap.hidden = true; return;
@@ -270,8 +304,7 @@ import { firebaseConfig } from "./firebase-config.js";
         localStorage.removeItem("love-me-local-events-" + id);
         if (localStorage.getItem("love-me-last-campaign-id") === id) localStorage.removeItem("love-me-last-campaign-id");
       } catch (_) {}
-      dashboard.dataset.campaignId = "";
-      shareCard.hidden = true; dashboard.hidden = true; $("#delete-link").hidden = true;
+      dashboard.dataset.campaignId = ""; campaignId = null;\n      shareCard.hidden = true; dashboard.hidden = false; $("#delete-link").hidden = true;\n      await refreshUserLinks();
       message(creatorMessage, "Link deleted from this phone. If Firebase deletion was blocked, cloud data may still remain.", "success");
     } catch (error) {
       console.error("Delete link failed", error);
@@ -347,8 +380,7 @@ import { firebaseConfig } from "./firebase-config.js";
     startApp().then(async () => {
       const lastId = (() => { try { return localStorage.getItem("love-me-last-campaign-id"); } catch (_) { return null; } })();
       const local = readLocalCampaigns().find((item) => item.id === lastId);
-      if (local) {
-        dashboard.dataset.campaignId = local.id;
+      if (local) {\n        dashboard.dataset.campaignId = local.id;
         shareUrl.value = new URL("?love=" + encodeURIComponent(local.id), window.location.href).toString();
         shareCard.hidden = false;
         dashboard.hidden = false;
@@ -356,8 +388,7 @@ import { firebaseConfig } from "./firebase-config.js";
         $("#love-name").value = local.loveName || "";
         $("#question-choice").value = local.question || "Do You Love Me?";
   dashboardNote.textContent = "Local saved link for " + local.loveName + ". This link has no automatic 7-day expiry.";
-        if (currentUser) await refreshDashboard();
-      }
+        if (currentUser) await refreshDashboard();\n      } else { await refreshUserLinks(); }
     }).catch((error) => { console.error(error); message(creatorMessage, "Firebase could not start. Check the config file.", "error"); });
   }
 })();
