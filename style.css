@@ -5,3 +5,24 @@
 .recipient-panel{width:min(100%,560px);margin:0 auto}.love-card{text-align:center}.local-gif{display:block;width:min(100%,250px);max-height:32vh;object-fit:contain;border-radius:18px;margin:0 auto 24px}.love-card h2{font-size:clamp(29px,7vw,43px);line-height:1.15;letter-spacing:-1px;margin:8px 0 12px}.recipient-caption,.result-card>p{color:var(--muted);line-height:1.6}.button-stage{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;min-height:125px;margin-top:12px}.answer-btn{min-width:105px}.no-btn{position:relative;color:#8a6177;background:#fff0f6;border:1px solid #f8d4e3}.button-stage .no-btn{z-index:2}.result-card{margin-top:18px}.gif-result{display:block;max-width:100%;width:auto;max-height:38vh;object-fit:contain;margin:0 auto 18px;border-radius:16px}.details-form{text-align:left;margin-top:24px}.privacy-note{margin:0 0 5px}.footer{position:fixed;bottom:0;left:0;right:0;text-align:center;padding:14px 10px;background:#ffffffed;border-top:1px solid #f4e3eb;color:var(--muted);font-size:11px;backdrop-filter:blur(10px)}
 @media(min-width:620px){.stats-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.stat-card{padding:14px}.stat-card strong{font-size:26px}}@media(max-width:420px){body{padding:15px 12px 72px}.brand{margin-top:3px}.brand-mark{width:47px;height:47px;font-size:33px;border-radius:15px}.panel,.love-card{border-radius:23px;padding:22px 18px}.share-line{flex-direction:column}.share-line .secondary-btn{width:100%}.dashboard-heading{align-items:flex-start}.button-stage{gap:9px}.answer-btn{min-width:94px;padding:12px 14px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/* Compact recipient experience: keep the shared question and answer controls in one viewport. */
+.create-form select{width:100%;min-width:0;border:1px solid #e8cfdb;border-radius:14px;padding:14px 15px;color:var(--ink);background:#fff;font:inherit;outline:none}
+.create-form select:focus{border-color:var(--pink);box-shadow:0 0 0 3px #ff4f981a}
+body.recipient-mode{min-height:100svh;height:100svh;overflow:hidden;padding:clamp(8px,2vh,18px) 12px;display:flex;align-items:center;justify-content:center}
+.recipient-mode .app-shell{width:min(100%,560px);max-height:100%;display:flex;align-items:center;justify-content:center}
+.recipient-mode .recipient-panel{width:100%;max-height:100%;display:flex;align-items:center;justify-content:center}
+.recipient-mode .love-card{width:100%;max-height:calc(100svh - 20px);overflow:auto;padding:clamp(12px,2.4vh,22px) clamp(16px,4vw,26px);border-radius:22px}
+.recipient-mode .local-gif{width:auto;max-width:min(100%,220px);height:auto;max-height:27svh;margin:0 auto clamp(8px,1.5vh,14px)}
+.recipient-mode .eyebrow{margin-bottom:4px;font-size:10px}
+.recipient-mode .love-card h2{font-size:clamp(25px,6.4vw,36px);margin:6px 0 8px}
+.recipient-mode .recipient-caption{margin:4px 0 8px;font-size:13px}
+.recipient-mode .button-stage{min-height:72px;margin-top:4px}
+.recipient-mode .result-card{margin:0}
+.recipient-mode .gif-result{max-height:19svh;margin:0 auto 8px}
+.recipient-mode .result-card>p{font-size:12px;margin:6px 0}
+.recipient-mode .details-form{gap:6px;margin-top:12px}
+.recipient-mode .details-form label{font-size:12px}
+.recipient-mode .details-form input{padding:10px 12px;border-radius:11px}
+.recipient-mode .details-form .primary-btn{padding:10px 14px}
+.recipient-mode .privacy-note{font-size:10px}
+@media(max-height:650px){.recipient-mode .local-gif{max-height:18svh}.recipient-mode .love-card{padding:10px 16px}.recipient-mode .love-card h2{font-size:25px}.recipient-mode .button-stage{min-height:58px}.recipient-mode .gif-result{max-height:14svh}.recipient-mode .details-form{margin-top:6px}}
