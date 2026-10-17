@@ -21,8 +21,9 @@ service cloud.firestore {
 
     match /campaigns/{campaignId} {
       // Share links stop working after the seven-day expiry.
-      allow get: if resource.data.expiresAt > request.time &&
-        (resource.data.active == true || (signedIn() && resource.data.ownerUid == request.auth.uid));
+      // Owners can manage their own campaign even after expiry; visitors cannot open expired links.
+      allow get: if (signedIn() && resource.data.ownerUid == request.auth.uid)
+        || (resource.data.expiresAt > request.time && resource.data.active == true);
       allow list: if signedIn() && resource.data.ownerUid == request.auth.uid
         && resource.data.expiresAt > request.time;
       allow create: if signedIn()
@@ -58,7 +59,7 @@ service cloud.firestore {
           && request.resource.data.expiresAt > request.time
           && request.resource.data.expiresAt <= request.time + duration.value(8, 'd');
         allow read: if ownsCampaign(campaignId);
-        allow update, delete: if false;
+        allow update: if false;\n        allow delete: if ownsCampaign(campaignId);
       }
     }
 
