@@ -53,3 +53,12 @@ body.recipient-mode{min-height:100svh;height:100svh;overflow:hidden;padding:clam
 
 .delete-link-btn{margin-top:12px;border:1px solid #f1b8c5;border-radius:12px;padding:10px 14px;background:#fff4f5;color:#a92b52;font:inherit;font-weight:700}
 .delete-link-btn:active{transform:scale(.99)}
+
+.notice-backdrop{position:fixed;z-index:50;inset:0;display:grid;place-items:center;padding:18px;background:#2d17255e;backdrop-filter:blur(6px)}
+.notice-dialog{width:min(100%,420px);padding:24px;border:1px solid var(--line);border-radius:24px;background:#fff;box-shadow:0 24px 80px #39263840;animation:quick-menu-in .24s ease-out both}
+.notice-heart{font-size:32px;margin-bottom:8px}
+.notice-dialog h2{font-size:23px;line-height:1.2;margin:0 0 12px}
+.notice-dialog p{font-size:14px;line-height:1.65;color:var(--muted)}
+.notice-dialog .notice-warning{padding:12px;border-radius:12px;background:#fff4f7;color:#8d3658}
+.notice-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:18px}
+.notice-actions button{min-height:44px}
