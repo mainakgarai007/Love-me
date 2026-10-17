@@ -10,7 +10,7 @@ import { firebaseConfig } from "./firebase-config.js";
   const createForm = $("#create-form"), creatorMessage = $("#creator-message"), shareCard = $("#share-card"), shareUrl = $("#share-url");
   const dashboard = $("#dashboard"), signInButton = $("#sign-in"), signOutButton = $("#sign-out"), dashboardNote = $("#dashboard-note");
   const stats = $("#stats"), historyWrap = $("#history-wrap"), music = $("#background-music");
-  const noButton = $("#no-button"), yesButton = $("#yes-button"), stage = $("#button-stage"), result = $("#recipient-result");
+  const noButton = $("#no-button"), noButtonSlot = $("#no-button-slot"), yesButton = $("#yes-button"), stage = $("#button-stage"), result = $("#recipient-result");
   const detailsForm = $("#recipient-details");
   const quickMenu = $("#quick-menu"), quickMenuToggle = $("#quick-menu-toggle"), quickMenuPanel = $("#quick-menu-panel"), feedbackModal = $("#feedback-modal");
   const accountNoticeModal = $("#account-notice-modal");
@@ -80,12 +80,13 @@ import { firebaseConfig } from "./firebase-config.js";
     if (p && p.catch) p.catch(() => {});
   }
   function moveNoButton() {
-    const box = stage.getBoundingClientRect(), button = noButton.getBoundingClientRect(), pad = 4;
-    const maxX = Math.max(pad, box.width - button.width - pad);
-    const maxY = Math.max(pad, box.height - button.height - pad);
+    if (!noButton || !noButtonSlot) return;
+    const box = noButtonSlot.getBoundingClientRect(), button = noButton.getBoundingClientRect(), pad = 3;
+    const maxX = Math.max(0, box.width - button.width - pad * 2);
+    const maxY = Math.max(0, box.height - button.height - pad * 2);
     noButton.style.position = "absolute";
-    noButton.style.left = (pad + Math.random() * Math.max(0, maxX - pad)) + "px";
-    noButton.style.top = (pad + Math.random() * Math.max(0, maxY - pad)) + "px";
+    noButton.style.left = (pad + Math.random() * maxX) + "px";
+    noButton.style.top = (pad + Math.random() * maxY) + "px";
   }
   async function recordEvent(type, extra = {}) {
     if (!campaignId || !visitorId) return;
