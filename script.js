@@ -17,12 +17,15 @@
 
   let answered = false;
 
-  function playBackgroundMusic() {
-    if (!backgroundMusic || !backgroundMusic.paused) return;
+  function playSoftLoveMusic() {
+    if (!backgroundMusic) return;
+    backgroundMusic.volume = 0.35;
+    if (!backgroundMusic.paused) return;
+
     const playback = backgroundMusic.play();
     if (playback && typeof playback.catch === "function") {
       playback.catch(() => {
-        // Browsers may block audio until a user gesture; the page still works.
+        // Audio can be blocked by browser settings; the result still appears.
       });
     }
   }
@@ -33,34 +36,48 @@
     const padding = 8;
     const maxX = Math.max(padding, area.width - button.width - padding);
     const maxY = Math.max(padding, area.height - button.height - padding);
+
     noBtn.style.position = "absolute";
     noBtn.style.left = `${padding + Math.random() * (maxX - padding)}px`;
     noBtn.style.top = `${padding + Math.random() * (maxY - padding)}px`;
     noBtn.style.right = "auto";
   }
 
+  // The No button dodges the pointer and cannot be selected.
   noBtn.addEventListener("pointerenter", (event) => {
     if (!answered && event.pointerType === "mouse") moveNoButton();
   });
 
-  noBtn.addEventListener("touchstart", () => {
-    if (!answered) moveNoButton();
-  }, { passive: true });
+  noBtn.addEventListener("pointerdown", (event) => {
+    if (answered) return;
+    event.preventDefault();
+    moveNoButton();
+  });
 
-  noBtn.addEventListener("click", () => {
-    playBackgroundMusic();
+  noBtn.addEventListener("touchstart", (event) => {
+    if (answered) return;
+    event.preventDefault();
+    moveNoButton();
+  }, { passive: false });
+
+  noBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!answered) moveNoButton();
   });
 
   yesBtn.addEventListener("click", () => {
     if (answered) return;
     answered = true;
+
     questionContainer.hidden = true;
     heartLoader.style.display = "block";
-    playBackgroundMusic();
+    playSoftLoveMusic();
 
     window.setTimeout(() => {
       heartLoader.style.display = "none";
       resultContainer.style.display = "block";
+
       if (gifResult) {
         gifResult.muted = true;
         const playback = gifResult.play();
