@@ -100,8 +100,7 @@ import { firebaseConfig } from "./firebase-config.js";
         if (["yes", "no_attempt", "details"].includes(type)) localStorage.setItem(interactionKey, "1");
       } catch (_) {}
       await addDoc(collection(db, "campaigns", campaignId, "events"), {
-        ...event, isRepeat, createdAt: serverTimestamp(),
-        expiresAt: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+        ...event, isRepeat, createdAt: serverTimestamp()
       });
     } catch (error) {
       console.error("Could not save response event", error);
@@ -133,7 +132,7 @@ import { firebaseConfig } from "./firebase-config.js";
     }
     const activeCount = await countActiveCampaigns();
     if (activeCount >= 3) {
-      message(creatorMessage, "You already have 3 active links. Wait for one to expire before creating another.", "error");
+      message(creatorMessage, "You already have 3 active links. Delete one of your existing links before creating another.", "error");
       return;
     }
     const id = safeId().replaceAll("-", "").slice(0, 18);
