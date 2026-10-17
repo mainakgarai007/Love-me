@@ -7,6 +7,7 @@
   const heartLoader = document.querySelector(".cssload-main");
   const yesBtn = document.querySelector(".js-yes-btn");
   const noBtn = document.querySelector(".js-no-btn");
+  const buttonContainer = document.querySelector(".button-container");
   const backgroundMusic = document.getElementById("background-music");
 
   if (!questionContainer || !resultContainer || !yesBtn || !noBtn || !heartLoader) {
@@ -27,7 +28,7 @@
   }
 
   function moveNoButton() {
-    const area = questionContainer.getBoundingClientRect();
+    const area = (buttonContainer || questionContainer).getBoundingClientRect();
     const button = noBtn.getBoundingClientRect();
     const padding = 8;
     const maxX = Math.max(padding, area.width - button.width - padding);
