@@ -232,6 +232,7 @@ import { firebaseConfig } from "./firebase-config.js";
       currentUser = user;
       signInButton.hidden = true; signOutButton.hidden = true;
       dashboardNote.textContent = user ? "Connected using a temporary account; no login screen is shown." : "Creating your temporary account…";
+      if (user && !linkId) refreshUserLinks().catch((error) => console.error("Could not load your links", error));
     });
     if (!auth.currentUser) {
       try { await signInAnonymously(auth); }
