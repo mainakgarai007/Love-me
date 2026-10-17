@@ -549,7 +549,7 @@ body {
 .button-container {
   position: relative;
   width: 100%;
-  min-height: 58px;
+  min-height: 110px;
   align-items: center;
 }
 
