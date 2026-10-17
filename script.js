@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, query, where, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 (() => {
@@ -143,7 +143,7 @@ import { firebaseConfig } from "./firebase-config.js";
     const url = new URL(window.location.href);
     url.search = ""; url.searchParams.set("love", id);
     shareUrl.value = url.toString(); shareCard.hidden = false;
-    dashboard.dataset.campaignId = id; dashboard.hidden = false;
+    dashboard.dataset.campaignId = id; dashboard.hidden = false; $("#delete-link").hidden = false;
     dashboardNote.textContent = "Temporary account: " + creatorName + ". Link expires in 7 days. This browser keeps a local copy.";
     message(creatorMessage, "Your love link is ready. Copy it and share it ❤️", "success");
     await refreshDashboard();
@@ -206,14 +206,45 @@ import { firebaseConfig } from "./firebase-config.js";
     try {
       localStorage.setItem("love-me-creator-name", creatorName);
       await createCampaign(creatorName, loveName, question);
-    } catch (error) { console.error(error); message(creatorMessage, "Could not create the link. Check Firebase Authentication and Firestore rules.", "error"); }
+    } catch (error) { console.error(error); message(creatorMessage, "Could not create link (" + (error.code || error.message || "unknown error") + "). Enable Anonymous Authentication and publish the current Firestore rules.", "error"); }
   });
   try { $("#creator-name").value = localStorage.getItem("love-me-creator-name") || ""; } catch (_) {}
   $("#copy-link").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(shareUrl.value); message(creatorMessage, "Link copied! Share it with care ❤️", "success"); }
     catch (_) { shareUrl.focus(); shareUrl.select(); message(creatorMessage, "Select and copy the link from the box above.", "error"); }
   });
-  $("#refresh-dashboard").addEventListener("click", () => refreshDashboard().catch(console.error));
+  $("#refresh-dashboard").addEventListener("click", () => refreshDashboard().catch((error) => {
+    console.error(error);
+    dashboardNote.textContent = "Could not refresh: " + (error.code || error.message || "unknown error");
+  }));
+  $("#delete-link").addEventListener("click", async () => {
+    const id = dashboard.dataset.campaignId || campaignId;
+    if (!id) return;
+    if (!window.confirm("Delete this love link from Firebase and this phone? Anyone using the link will no longer be able to open it.")) return;
+    try {
+      if (db && currentUser) {
+        const ref = doc(db, "campaigns", id);
+        const snap = await getDoc(ref);
+        if (snap.exists() && snap.data().ownerUid === currentUser.uid) {
+          const eventsSnap = await getDocs(collection(db, "campaigns", id, "events"));
+          for (const eventDoc of eventsSnap.docs) await deleteDoc(eventDoc.ref);
+          await deleteDoc(ref);
+        }
+      }
+      const remaining = readLocalCampaigns().filter(item => item.id !== id);
+      try {
+        localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(remaining));
+        localStorage.removeItem("love-me-local-events-" + id);
+        if (localStorage.getItem("love-me-last-campaign-id") === id) localStorage.removeItem("love-me-last-campaign-id");
+      } catch (_) {}
+      dashboard.dataset.campaignId = "";
+      shareCard.hidden = true; dashboard.hidden = true; $("#delete-link").hidden = true;
+      message(creatorMessage, "Link deleted from this phone. If Firebase deletion was blocked, cloud data may still remain.", "success");
+    } catch (error) {
+      console.error("Delete link failed", error);
+      message(creatorMessage, "Could not delete from Firebase (" + (error.code || error.message || "unknown error") + "). Check published Firestore rules; local data was kept.", "error");
+    }
+  });
 
   function setQuickMenuOpen(open) {
     quickMenu.classList.toggle("is-open", open);
