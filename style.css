@@ -62,3 +62,6 @@ body.recipient-mode{min-height:100svh;height:100svh;overflow:hidden;padding:clam
 .notice-dialog .notice-warning{padding:12px;border-radius:12px;background:#fff4f7;color:#8d3658}
 .notice-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:18px}
 .notice-actions button{min-height:44px}
+
+.notice-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:18px}
+.notice-actions .primary-btn,.notice-actions .secondary-btn{font-size:13px}
