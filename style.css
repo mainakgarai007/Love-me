@@ -75,3 +75,10 @@ body.recipient-mode{min-height:100svh;height:100svh;overflow:hidden;padding:clam
 .user-link-row.is-selected{border-color:var(--accent,#e83e8c);background:#fff2f8}
 .user-link-select{flex:1;min-width:0;text-align:left;border:0;background:transparent;padding:11px 9px;color:var(--ink);font:inherit;font-size:14px;overflow-wrap:anywhere}
 .user-link-open{width:38px;height:38px;flex:none;border:0;border-radius:10px;background:#ffe4ef;color:#b92d70;font-size:19px}
+
+/* Keep the playful No button in its own lane so it can never cover Yes. */
+.button-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;justify-items:center;gap:10px;overflow:visible}
+#yes-button{grid-column:1;position:relative;z-index:3}
+.no-button-slot{grid-column:2;position:relative;width:min(100%,150px);height:112px;align-self:center;justify-self:center}
+.button-stage .no-btn{position:absolute;left:3px;top:28px;z-index:1;touch-action:manipulation}
+@media(max-width:420px){.button-stage{gap:4px}.no-button-slot{width:100%;height:100px}.button-stage .no-btn{min-width:88px;padding:11px 10px}}
