@@ -146,6 +146,7 @@ import { firebaseConfig } from "./firebase-config.js";
     }
     const eventSnap = await getDocs(query(collection(db, "campaigns", id, "events"), orderBy("createdAt", "desc")));
     const events = eventSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    try { localStorage.setItem("love-me-local-events-" + id, JSON.stringify(events.map((event) => ({ ...event, createdAt: event.createdAt && event.createdAt.toDate ? event.createdAt.toDate().toISOString() : null })))); } catch (_) {}
     const visitorSet = new Set(events.filter(e => e.type === "visit").map(e => e.visitorId));
     const yesEvents = events.filter(e => e.type === "yes"), noEvents = events.filter(e => e.type === "no_attempt"), repeatEvents = events.filter(e => e.isRepeat);
     $("#unique-count").textContent = visitorSet.size; $("#yes-count").textContent = yesEvents.length;
